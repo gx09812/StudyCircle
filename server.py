@@ -14,6 +14,7 @@ FILES_FOLDER = "files"
 def search_files(keyword):
 
     keyword = keyword.lower()
+
     results = []
 
     for filename in os.listdir(FILES_FOLDER):
@@ -27,6 +28,7 @@ def search_files(keyword):
 
         try:
 
+            # Markdown
             if filename.lower().endswith(".md"):
 
                 with open(
@@ -37,6 +39,19 @@ def search_files(keyword):
 
                     text = f.read()
 
+            # HTML
+            elif filename.lower().endswith(".html"):
+
+                with open(
+                    path,
+                    "r",
+                    encoding="utf-8",
+                    errors="ignore"
+                ) as f:
+
+                    text = f.read()
+
+            # PDF
             elif filename.lower().endswith(".pdf"):
 
                 pdf = PdfReader(path)
@@ -52,6 +67,7 @@ def search_files(keyword):
                             + extracted
                         )
 
+            # PPT / PPTX
             elif (
                 filename.lower().endswith(".ppt")
                 or
@@ -66,7 +82,10 @@ def search_files(keyword):
 
                     for shape in slide.shapes:
 
-                        if hasattr(shape, "text"):
+                        if hasattr(
+                            shape,
+                            "text"
+                        ):
 
                             text += (
                                 shape.text
@@ -74,6 +93,7 @@ def search_files(keyword):
                             )
 
         except:
+
             continue
 
         paragraphs = re.split(
@@ -85,19 +105,28 @@ def search_files(keyword):
 
             if keyword in para.lower():
 
-                if filename.endswith(".md"):
+                if filename.lower().endswith(".md"):
+
                     link = f"/view/{filename}"
 
-                elif filename.endswith(".pdf"):
+                elif filename.lower().endswith(".pdf"):
+
                     link = f"/pdf/{filename}"
 
+                elif filename.lower().endswith(".html"):
+
+                    link = f"/html/{filename}"
+
                 else:
+
                     link = f"/ppt/{filename}"
 
                 results.append({
 
                     "file": filename,
+
                     "snippet": para[:350],
+
                     "link": link
 
                 })
@@ -120,24 +149,22 @@ def home():
 
 body{
 background:#0d1117;
-color:white;
 font-family:Arial;
 padding:40px;
+color:white;
 }
 
 .file{
 display:block;
-
 padding:12px;
-
 margin:10px 0;
-
 background:#161b22;
-
 border-radius:10px;
-
 text-decoration:none;
+color:#58a6ff;
+}
 
+.searchLink{
 color:#58a6ff;
 }
 
@@ -145,13 +172,19 @@ color:#58a6ff;
 
 <body>
 
-<h1>Study Dashboard</h1>
+<h1>StudyCircle</h1>
 
-<a href="/topics">Study Topics</a>
+<a class="searchLink"
+href="/topics">
+
+Study Topics
+
+</a>
 
 <br><br>
 
-<a href="/search">
+<a class="searchLink"
+href="/search">
 
 Search Content
 
@@ -173,6 +206,10 @@ Search Content
 
             link = f"/pdf/{file}"
 
+        elif lower.endswith(".html"):
+
+            link = f"/html/{file}"
+
         elif (
             lower.endswith(".ppt")
             or
@@ -182,9 +219,10 @@ Search Content
             link = f"/ppt/{file}"
 
         else:
+
             continue
 
-        html += f'''
+        html += f"""
 
 <a
 class="file"
@@ -194,7 +232,7 @@ href="{link}">
 
 </a>
 
-'''
+"""
 
     html += "</body></html>"
 
@@ -208,51 +246,21 @@ def topics():
 
 <html>
 
-<style>
-
-body{
+<body
+style="
 background:#0d1117;
-color:white;
 padding:40px;
+color:white;
 font-family:Arial;
-}
-
-.topic{
-display:flex;
-
-gap:10px;
-
-padding:10px;
-
-margin:10px 0;
-
-background:#161b22;
-}
-
-.done span{
-
-opacity:.5;
-
-text-decoration:line-through;
-}
-
-input{
-padding:10px;
-}
-
-</style>
-
-<body>
+">
 
 <a href="/">← Back</a>
 
-<h1>Topics</h1>
+<h1>Study Topics</h1>
 
-<input
-id="topicInput">
+<input id="topicInput">
 
-<button
-onclick="addTopic()">
+<button onclick="addTopic()">
 
 Add
 
@@ -271,7 +279,7 @@ function load(){
 
 area.innerHTML="";
 
-const t =
+const topics =
 JSON.parse(
 
 localStorage.getItem(
@@ -284,30 +292,35 @@ localStorage.getItem(
 
 );
 
-t.forEach(
+topics.forEach(
 
-(x,i)=>{
+(t,i)=>{
 
 area.innerHTML += `
 
-<div class="
-topic
-${x.done?'done':''}
+<div style="
+padding:10px;
+margin:10px 0;
+background:#161b22;
 ">
 
 <input
 
 type="checkbox"
 
-${x.done?'checked':''}
+${t.done?'checked':''}
 
 onchange="toggle(${i})"
 
 >
 
-<span>
+<span style="
+${t.done?
+'opacity:.5;text-decoration:line-through'
+:''}
+">
 
-${x.name}
+${t.name}
 
 </span>
 
@@ -321,7 +334,7 @@ ${x.name}
 
 function addTopic(){
 
-let input =
+const input =
 document.getElementById(
 "topicInput"
 );
@@ -329,7 +342,7 @@ document.getElementById(
 if(!input.value)
 return;
 
-let t =
+const topics =
 JSON.parse(
 
 localStorage.getItem(
@@ -342,7 +355,7 @@ localStorage.getItem(
 
 );
 
-t.push({
+topics.push({
 
 name:input.value,
 
@@ -354,7 +367,9 @@ localStorage.setItem(
 
 "study_topics",
 
-JSON.stringify(t)
+JSON.stringify(
+topics
+)
 
 );
 
@@ -366,7 +381,7 @@ load();
 
 function toggle(i){
 
-let t =
+const topics =
 JSON.parse(
 
 localStorage.getItem(
@@ -379,14 +394,16 @@ localStorage.getItem(
 
 );
 
-t[i].done =
-!t[i].done;
+topics[i].done =
+!topics[i].done;
 
 localStorage.setItem(
 
 "study_topics",
 
-JSON.stringify(t)
+JSON.stringify(
+topics
+)
 
 );
 
@@ -423,27 +440,27 @@ def search():
 
         for r in results:
 
-            output += f'''
+            output += f"""
 
 <a
-class="file"
-href="{r["link"]}">
+class="card"
+href="{r['link']}">
 
 <h3>
 
-{r["file"]}
+{r['file']}
 
 </h3>
 
 <p>
 
-{r["snippet"]}
+{r['snippet']}
 
 </p>
 
 </a>
 
-'''
+"""
 
     return f"""
 
@@ -453,30 +470,25 @@ href="{r["link"]}">
 
 body{{
 background:#0d1117;
-color:white;
 padding:40px;
 font-family:Arial;
+color:white;
 }}
 
 input{{
 width:100%;
 padding:12px;
 background:#161b22;
-color:white;
 border:none;
+color:white;
 }}
 
-.file{{
+.card{{
 display:block;
-
 background:#161b22;
-
 padding:15px;
-
 margin:10px 0;
-
 text-decoration:none;
-
 color:white;
 }}
 
@@ -519,7 +531,7 @@ def view(filename):
 
         md = f.read()
 
-    html = markdown.markdown(
+    rendered = markdown.markdown(
         md,
         extensions=[
             "tables",
@@ -529,19 +541,37 @@ def view(filename):
 
     return f"""
 
-<body style="
+<body
+style="
 background:#0d1117;
-color:white;
 padding:40px;
+color:white;
 ">
 
 <a href="/">← Back</a>
 
-{html}
+{rendered}
 
 </body>
 
 """
+
+
+@app.route("/html/<filename>")
+def html_view(filename):
+
+    with open(
+        os.path.join(
+            FILES_FOLDER,
+            filename
+        ),
+        encoding="utf-8",
+        errors="ignore"
+    ) as f:
+
+        html = f.read()
+
+    return html
 
 
 @app.route("/pdf/<filename>")
@@ -581,7 +611,7 @@ def ppt_view(filename):
         )
     )
 
-    out = ""
+    content = ""
 
     for slide in prs.slides:
 
@@ -592,7 +622,7 @@ def ppt_view(filename):
                 "text"
             ):
 
-                out += f"<p>{shape.text}</p>"
+                content += f"<p>{shape.text}</p>"
 
             if shape.shape_type == 13:
 
@@ -604,7 +634,7 @@ def ppt_view(filename):
 
                     ext = shape.image.ext
 
-                    out += f'''
+                    content += f'''
 
 <img
 src="data:image/{ext};base64,{img}"
@@ -613,19 +643,21 @@ style="max-width:100%">
 '''
 
                 except:
+
                     pass
 
     return f"""
 
-<body style="
+<body
+style="
 background:#0d1117;
-color:white;
 padding:40px;
+color:white;
 ">
 
 <a href="/">← Back</a>
 
-{out}
+{content}
 
 </body>
 
